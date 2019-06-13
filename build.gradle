@@ -1,0 +1,82 @@
+buildscript {
+    repositories {
+        mavenCentral()
+        //Needed only for SNAPSHOT versions
+        //maven { url 'https://oss.sonatype.org/content/repositories/snapshots/' }
+    }
+    dependencies {
+        classpath 'info.solidsoft.gradle.pitest:gradle-pitest-plugin:1.4.0'
+    }
+}
+
+plugins {
+    id "io.spring.dependency-management" version "1.0.6.RELEASE"
+    id "com.github.johnrengelman.shadow" version "4.0.2"
+    id "application"
+    id "org.jetbrains.kotlin.jvm" version "1.3.31"
+    id "org.jetbrains.kotlin.kapt" version "1.3.31"
+    id "org.jetbrains.kotlin.plugin.allopen" version "1.3.31"
+}
+
+version "0.1"
+group "com.example"
+apply plugin: 'info.solidsoft.pitest'
+
+
+repositories {
+    mavenCentral()
+}
+
+dependencyManagement {
+    imports {
+        mavenBom 'io.micronaut:micronaut-bom:1.1.2'
+    }
+}
+
+configurations {
+    // for dependencies that are needed for development only
+    developmentOnly
+}
+
+dependencies {
+    // Framework
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${kotlinVersion}"
+    compile "org.jetbrains.kotlin:kotlin-reflect:${kotlinVersion}"
+    compile "io.micronaut:micronaut-runtime:1.1.+"
+    kapt "io.micronaut:micronaut-inject-java"
+    kapt "io.micronaut:micronaut-validation"
+    kaptTest "io.micronaut:micronaut-inject-java"
+    compile 'io.micronaut.configuration:micronaut-hibernate-validator'
+
+    // Testing
+    testCompile 'junit:junit:4.12'
+}
+
+test.classpath += configurations.developmentOnly
+
+shadowJar {
+    mergeServiceFiles()
+}
+
+allOpen {
+    annotation("io.micronaut.aop.Around")
+}
+
+compileKotlin {
+    kotlinOptions {
+        jvmTarget = '1.8'
+        //Will retain parameter names for Java reflection
+        javaParameters = true
+    }
+}
+
+compileTestKotlin {
+    kotlinOptions {
+        jvmTarget = '1.8'
+        javaParameters = true
+    }
+}
+
+pitest {
+    pitestVersion = '1.4.8'
+}
